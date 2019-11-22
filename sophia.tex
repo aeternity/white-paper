@@ -1,0 +1,261 @@
+\section{Sophia smart contracts}
+\label{sect:sophia}
+
+Smart contracts \cite{szabo1996smart,hhz007} are
+programs on the blockchain that can perform tasks with the data on that
+blockchain. Typically contracts have state (data), which is recorded on the
+chain. A call to a function in the contract results in a return value
+and updated state, both put back on the chain as a result of the
+call.
+
+Smart contracts are written in a programming language and for the
+aeternity a totally new language has been designed, called
+\textit{Sophia}. There is a compiler that compiles Sophia contracts to
+byte code that is executed by the virtual machine part of the
+blockchain.
+
+Contracts are put on chain by contract create
+transaction, specifying their byte code and data to compute the
+initial state. A contract on chain is called by contract call transactions\footnote{in
+  Aeternity  contracts are executed by a call, there is no
+  mechanism to automatically progress computation.}. Each contract
+creation and contract call requires computation effort and the user is paying
+for that effort by paying for \textit{gas}. Each operation is
+associated with a certain amount of gas and the total used gas is paid
+for. The user specifies how much gas is provided in the transaction. A
+surplus is returned. If there is too little gas provided, the
+transaction is accepted (it is recorded
+on the chain), and the user pays for transaction fee and gas,
+but the contract computation has failed and its state is unchanged.
+
+Smart contracts are an active research field
+\cite{DBLP:journals/corr/abs-1710-06372} and a substantial amount of
+  effort goes in to studying the verification and validation of smart contracts
+  \cite{magazzeni2017validation,bhargavan2016formal}.
+
+There are two major technical challenges for smart contract
+implementations. The first challenge is to make the contracts
+execute fast without requiring too many resources. In a blockchain
+implementation, contract execution is performed in a
+\textit{virtual machine}. This is an execution engine with formally
+defined semantics, such that all implementations perform exactly the
+same computation steps, with exactly the same result and charging
+exactly the same amount of gas. The aeternity blockchain defines two virtual
+machines, the AEVM, compatible to the Ethereum blockchain, and the more
+efficient FATE virtual machine.
+
+The second challenge is to design a language to express contracts in
+such a way that one can understand and reason about the contract
+both as a human, but also mechanically by computer programs. The
+language should by design protect contract designers against
+vulnerabilities that can be exploited. Sophia is a functional language
+to accommodate for these properties. It is designed as a contract
+language with security and user comfort in mind. In particular,
+vulnerabilities in contracts in other languages
+\cite{atzei2017survey,mehar2019understanding,delmolino2016step} have been studied with the goal to
+avoid the possibility to make such mistakes in Sophia.
+
+\subsection{The Sophia language}
+
+\todo{Mention calling a contract  from a contract}
+
+Sophia is a functional language \cite{hughes1989functional}.
+The main unit of code in Sophia is the \textit{contract}.
+A contract implementation, or simply a contract, is the code for a
+smart contract and consists of a list of types, entrypoints and local
+functions. Only the entrypoints can be called from outside the
+contract.   A \textit{contract instance} is an entity living on the
+block chain (or in a state channel). Each instance has an address that
+can be used to call its entrypoints, either from another contract or
+in a call transaction.  A contract may define a type \texttt{state}
+encapsulating its local state. When creating a new contract the
+\texttt{init} entrypoint is executed and the state is initialized to its
+return value.
+
+
+\subsubsection{Dutch auction contract}
+
+As an example, let us consider an auction contract.  In such an
+auction contract, a user could auction an object in the real world by
+creating and posting a contract to the blockchain, using a \textbf{contract
+create transaction}. Let us assume that
+this is a Dutch auction, then the initial price
+would be set high and for each new key-block that is mined (representing
+time) the price is decreased. Someone buys the object by calling a
+\texttt{bid} function. When this bidding \textbf{contract call transaction} executes,
+the contract computes the price on that height; if the caller has
+supplied enough funds in that call, the seller is paid, the
+bidder is charged (possibly refunded the extras) and the contract
+enters a non sellable state for the object. The next bidder will fail
+the call and only pays for transaction costs, not for the object.
+
+The complete Sophia code for a Dutch auction is presented here:
+
+\begin{verbatim}
+contract DutchAuction =
+
+  record state = { amount : int,
+                   height : int,
+                   dec    : int,
+                   sold   : bool }
+
+  entrypoint init(price, decrease) : state =
+    { amount = price,
+      height = Chain.block_height,
+      dec    = decrease,
+      sold   = false }
+
+  stateful payable entrypoint bid() =
+    require( !state.sold, "sold"  )
+    let price = demanded_price()
+    require( Contract.balance >= price, "not enough tokens" )
+    Chain.spend(Contract.creator, price)
+    Chain.spend(Call.origin, Contract.balance)
+    put(state{sold = true})
+
+  function demanded_price() : int =
+    state.amount - (Chain.block_height - state.height) * state.dec
+
+\end{verbatim}
+
+The contract languages and hence the evaluation in the virtual
+machine, must have access to blockchain primitives like the height of
+the chain and caller accounts. Typically, all blockchain
+primitives are available from within a contract.
+
+Note that the contract create transaction includes the contract
+byte code, not the source code, together with information on
+which version of the compiler is used. Compiled for FATE this contract
+results in 254 bytes, whereas compiled for the AEVM 2092 bytes are
+needed. The gas needed to compute the initial state is 240 for FATE compared
+to 741 for the AEVM.
+
+The \texttt{init} function is called when the contract is created to
+compute the initial state of the contract. The \texttt{init} function
+is not part of the byte code, such that it cannot accidentally be
+called again. If one wants to reset the state, this has to be
+explicitly programmed to avoid expensive exploits
+\cite{suiche2017280}.
+The contract designer also has to explicitly mention whether the
+state of the contract is changed in a call (using the
+\texttt{stateful} keyword).
+Entrypoints can be called from outside the contract, whereas functions
+are only accessible from within the contract.
+
+The keyword \texttt{payable} is added to explicitly state which
+function calls expect to come with additional tokens in the contract
+call transaction. These tokens are added to the contract balance
+before the call is made. If, however, the call is reverted by a failing
+\texttt{require}d condition, then the provided tokens are returned.
+
+The transparency of the blockchain guarantees that it is verifiable
+that the first valid bid on chain\footnote{The blockchain
+  does not guarantee that the first one posting a valid bid becomes
+  the first one on chain.} is correctly paying the right
+price. Moreover, it is verifiable that the bidding call transactions accepted later are
+only charged a transaction fee and the cost of execution.
+The sale conditions are transparent, but whether the actual object ever
+arrives is outside the scope of the blockchain
+
+\subsection{The FATE virtual machine}
+\label{sect:fate}
+
+The Fast aeternity Transaction Engine (FATE) VM uses transactions as
+its basic operations and operates directly on the state tree of the
+æternity chain. This enables native integration with first class
+objects such as oracles, the naming system, and state channels since
+those are all managed by specific types of transactions described on
+the protocol level. FATE is a simple-to-use machine language, superior
+to the more traditional byte-code virtual machines currently used on
+other platforms. It enables easier, safe coding, faster transactions,
+and smaller code sizes. It is custom-built to seamlessly integrate
+with the functional smart contract language Sophia.
+
+\subsubsection{More secure}
+
+Every operation and every value is typed. Any type violation results in
+an exception and reverts all state changes. This prevents people to
+circumvent the compiler and write or modify their own FATE code to use
+type violations as an attack vector.
+
+The instruction memory is divided into functions and basic
+blocks. Only basic blocks can be indexed and used as jump
+destinations. This is a precaution to be unable to jump to arbitrary
+positions in memory. It also carefully fit FATE's function style by
+having function calls instead of jumps. Moreover, data and control
+flow are separated, one cannot possibly modify the running
+contract, since the code memory cannot be written to.
+
+FATE is “functional” in the sense that “updates” of data structures,
+such as tuples, lists or maps do not change the old values of the
+structure, instead a new version is created.  FATE does have the
+ability to write the value of an operation back to the same register
+or stack position as one of the arguments, in effect updating the
+memory.
+
+FATE solves a fundamental problem programmers run into when coding for
+Ethereum: integer overflow, weak type checking and poor data
+flow. FATE checks all arithmetic operations to keep the right meaning
+of it. Integers cannot overflow, since FATE uses unbounded integer
+arithmetic (cf.\ Bignums \cite{serpette1989bignum}). Floats are not
+part of the language, avoiding a bunch of issues associated with
+floating point arithmetic. Also you cannot cast types (e.g\ integers to booleans). This makes
+FATE ultimately a safer coding platform for smart contracts.
+
+\subsubsection{More efficient}
+
+FATE uses high level instructions. There are instructions to operate
+on the chain state tree in a safe and formalized way. Likewise the
+virtual machine has high level support for most of the transactions
+available on the aeternity blockchain. There are operations such as
+`ORACLE\_CHECK\_QUERY' for querying an oracle or `AENS\_CLAIM' for
+claiming a name.
+
+Having higher level instructions makes the code
+deployed smaller and it reduces the blockchain size. FATE contracts
+use on average ten times less space than the same contract compiled to
+the AEVM, the Ethereum compatible VM. At the same time, it performs on
+average much faster and uses therefore less gas.
+
+FATE byte code looks in itself as a readable program. For example,
+the bid function of the Dutch auction contract compiles to
+this code:
+
+\begin{verbatim}
+FUNCTION bid( ) : {tuple,[]}
+  ;; BB : 0
+          ELEMENT a 3 store1
+          NOT a a
+          JUMPIF a 2
+  ;; BB : 1
+          ABORT "sold"
+  ;; BB : 2
+          CALL "(h:p"
+  ;; BB : 3
+          POP var1
+          BALANCE a
+          EGT a a var1
+          JUMPIF a 5
+  ;; BB : 4
+          ABORT "not enough tokens"
+  ;; BB : 5
+          CREATOR a
+          SPEND a var1
+          BALANCE a
+          ORIGIN a
+          SPEND a a
+          SETELEMENT store1 3 store1 true
+          RETURNR ()
+\end{verbatim}
+
+The notion \verb+BB+ stands for basic block and jumps are always to
+such a basic block. Note that for example `CREATOR', `SPEND' and
+`BALANCE' are native instructions used in basic block 5. The
+instruction \verb+ CALL "(h:p"+ in basic block 2 looks a bit cryptic for a call to  the
+function \verb+demanded_price()+. Each function name is hashed to 4
+bytes that are printed as a string.
+
+Both memory constraints and computation efficiency are important to
+enable smaller contracts to also be run on IoT devices
+(cf. \cite{ellul2018alkylvm}) as well as to be able to get more
+computation into a micro-block.

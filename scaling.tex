@@ -1,0 +1,141 @@
+\section{Scaling with state channels}
+\label{sect:channels}
+
+The NG technology mentioned in the previous section improves
+scalability by faster preliminary confirmation times for
+transactions. It also lifts the restriction of a maxiumum number of transactions in a
+generation; when it takes longer to produce the next key-block,
+additional micro-blocks can be generated containing new transactions.
+This benefits throughput and confirmation times. But if parties really
+want confirmation times in milliseconds and perform more advanced
+computations than 6 million gas would allow, then state channels come to the rescue.
+
+Conceptually one can regard a state channel as an agreement between
+two parties to start a little transaction chain on the side. Only the
+agreeing parties have access to this chain in the so called
+\textit{state channel}. The notion of state comes from the fact that
+when starting the transaction chain, the parties agree the initial
+state of this chain. Typically, the state would
+contain some initial accounts for the involved parties in which they
+reserve some tokens from the aeternity blockchain for transactions in
+the channel.
+
+\subsection{On-chain and off-chain transactions}
+
+\textbf{Hans: I think the focus of the following sections is wrong. It is called
+state channels, not transaction channels, the focus should be on the
+mutually agreed state. Also only contract create/call (and token transfer) make
+sense in a channel so "all transactions" is wrong. I also think the presentation
+might be easier to follow if we do the separation into payment channels and fully
+fledged state channels?!}
+
+In Aeternity, transactions that can be posted to the aeternity
+blockchain can also be posted in the state channel. In this way parties
+create their own state from a sequence of transactions, without any
+mining involved. Instead of
+creating key or micro-blocks, the transactions are just
+directly applied to update the state. This requires that many of these
+transactions are signed by both parties to make sure that only states
+jointly agreed upon are recorded. This also
+means that there are no transaction or gas costs involved\footnote{In a state
+channel parties can agree to have a kind of transaction cost, but it
+is not the default implementation} and most notably that a transaction
+is confirmed as quickly as both parties can sign it. This confirmation
+time can therewith be reduced to milliseconds.
+
+A typical use-case for a state channel\todo{this is an example of a payment channel} is a subscription model, for
+example a coffee ``account'' with 25 cups of coffee. Each time one
+orders a coffee, the coffee shop
+creates a transaction to update the state and both shop
+and customer sign this transaction. They agree upon the new state.
+Since it would be annoying to have to wait 3 minutes or even 3 seconds
+on the payment of a cup of coffee, it is a good example for off-chain
+processing. At the same time, it also addresses privacy concerns,
+since only the involved parties and not all the users of the
+blockchain need to monitor the customers coffee consumption.
+
+Scaling is achieved by performing transactions \textit{off-chain},
+i.e.\ transaction in the channel. One starts with an \textit{on-chain}
+transaction agreeing and verifying a starting state and balance. After
+that many transaction can be performed without involving the aeternity
+blockchain. A coffee shop could have thousands of customers, all buying coffee and none of
+this puts transaction pressure on the blockchain. Only after
+terminating or topping up of a subscription, a new on-chain
+transaction should be recorded. Having a thousand cups of coffee paid
+per second is no technical limitation, but possibly hard to achieve as
+a business.
+
+The coffee subscription only includes two accounts and off chain
+payments from one of these accounts to the other. The Aeternity state
+channels can deal with all aeternity transaction types.\todo{This is wrong!} Notably one
+can create contracts in a channel or refer in a channel to contracts
+created on the blockchain. We discuss contracts in Sect.\
+\ref{sect:sophia}, but one use case is to implement a game playing
+contract (e.g.\ tic-tac-toe) and refer to that contract when playing the
+game in a channel. In such use-cases it is also an advantage to be
+able to play quickly and not having to wait 3 seconds before once move
+is included in a transaction.
+
+\subsection{Disputes}
+
+A state channel requires both parties to sign each state to make
+sure the state is agreed upon. Typically a state channel can be closed
+under mutual agreement and then a closing transaction is used to
+re-distributed and return the reserved balances to the on-chain
+accounts. Another way to extract reserved funds from a state channel
+is to mutually agree upon a withdraw from the channel to an account of
+one of the parties. Typically, topping up a subscription would be done
+in combination with the coffee shop withdrawing part of the funds in
+the channel.
+
+But there might be disputes. For example, a customer
+could decide not to cancel a subscription, but keep an empty account
+in the state channel for ever. This is disadvantageous for the shop,
+because it cannot extract the funds from the already paid coffee in
+mutual agreement. For this reason, there is a solo close transaction,
+a way for one party to close the channel on-state and use the last
+signed and agreed state as a proof on how the funds should be divided.
+
+Clearly, there is plethora of scenarios in which one can try to
+cheat. One could buy a coffee off-chain and at the same time solo
+close the channel on-chain. That would mean a free coffee. Therefore,
+funds are not immediately returned after a solo close, but kept for a
+certain period, called a \textit{lock period}. During this period the
+other party can post a transaction to refute this claim and show a
+later state obtained by a mutually signed transaction (the one after
+buying the additional coffee). Which then again could possibly be
+refuted, etc.
+
+Dealing with disputes is a considerable part of the logic and
+implementation of state channels. This becomes even more evident in
+the context of using contracts in a channel. A contract may be build
+in such a way that it re-distributes balances after a certain state has
+been reached. Imagine the above mentioned tic-tac-toe game contract,
+where the funds are re-distributed only after that one party has
+won. It could then be beneficial for a party to quit the
+game when loosing and solo close, or to simply refuse to sign the last
+transaction. Quitting when one expects to loose
+harms the other party, because there is no next state that is more
+beneficial than the initial state. For this purpose the other party
+can then force progress the contract and move to the winning
+state. That is, the party can perform a contract call and show that it
+ends up in state that can be claimed the actual final state for which
+the channel should be closed. Clearly, a number of different counter
+measures are present for the other party in case a malicious force
+progress transaction is posted.
+
+Users should keep in mind that, by using a state channel, they trade
+transaction efficiency and lower transaction fees for some reduction in
+safety.
+The on-chain transactions are under consensus, but on top of that,
+several implementations can be build that offer access to the state
+channel with their own implementation logic. For users of a state
+channel, it is important to know and understand the limitations of
+these off-chain implementations. For example, whether they monitor
+on-chain transactions that influence the state channel, such as a
+direct solo-close transaction on chain.
+Despite, a plurality of dispute handling primitives that are offered to
+mitigate the problems dealing with potentially malicious parties,
+users may not have the knowledge to use these primitives without a
+third party implementation. Therefore it is important to users to understand
+whether and how they are implemented.

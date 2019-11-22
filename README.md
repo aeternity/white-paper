@@ -1,2 +1,2 @@
-# white-paper
-White paper
+# AeternityWhitePaper
+Whitepaper for Aeternity  blockchain technology

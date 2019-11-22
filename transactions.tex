@@ -1,0 +1,531 @@
+\section{Transaction types}
+\label{sect:transactions}
+
+The aeternity blockchain offers a plurality of different transactions
+types, designed to simplify application development for features that are
+common or popular in the blockchain sphere. By using smart contracts,
+users can develop completely new features themselves, but for already
+identified features, a general set of transactions is
+provided. These features are spending tokens from one account to
+another (Sect.\ \ref{sect:aespend}), naming objects (Sect.\
+\ref{sect:aens}), oracles (Sect.\ \ref{sect:aeoracle}), and the
+transaction wrappers: generalized
+accounts (Sect.\ \ref{sect:ga}), and paying for
+(Sect. \ref{sect:payingfor}).
+There are also transactions for creating and calling contracts, as
+explained in Sect.\ \ref{sect:sophia} and for opening and closing
+state channels, deposit and withdraw funds from a state channel as
+well as solo closing, slash and force progress to deal with
+disputes as mentioned in Sect.\ \ref{sect:channels}.
+
+All transactions are serialized and then cryptographically signed, by default using EdDSA \cite{bernstein2012high}
+signatures with elliptic curve Curve25519
+\cite{bernstein2006curve25519}. In order to protect against double
+spending, each transaction also includes a nonce, which is a stricly
+increasing counter connected to the account of the signer.
+
+\subsection{Aeternity accounts}
+\label{sect:aespend}
+
+The most basic transaction is a \textbf{spend
+transaction} that is used to transfer tokens from one account to
+another. An account is identified by the public key of the signer of
+a transaction. The spend transaction also serves as the basis for
+creating new accounts, by accepting any new recipient public key as a new
+account.
+
+Posting a transaction to the chain can fail for many reasons, among
+which that the transaction is not correctly signed. But even correctly
+signed transactions may fail to become part of the chain.
+
+Each transaction specifies a \textit{fee} that the miner will
+     eventually collect when including the transaction in a
+     micro-block. This fee can be unattractive, in which case the
+     transaction will stay in the transaction pool until it
+     expires. Or the fee can be lower than the minimum fee defined by
+     consensus, in which case it is an erroneous transaction that
+     will be rejected. Including a transaction that is by consensus to be rejected,  such as a
+     transaction with lower fee than lowest agreed upon, is called
+     fraud. The micro-block is invalid and rejected by
+     all other nodes in the network\footnote{Technically posting
+       invalid micro-blocks is sometimes possible and a proof-of-fraud
+       transaction is posted later to punish the node posting this transaction.}.
+
+Each transaction specifies a \textit{nonce}  to prevent it from replay
+attacks \cite{Syverson}. Each new account starts with nonce 1 and as
+soon as a transaction with that nonce is accepted on chain, only
+transactions with nonce 2 are accepted, etc. A user can post a number
+of different transactions with the same nonce in which case it is
+non-deterministic which of these transactions will result on chain,
+but only one of them will be accepted and the others thereafter
+rejected. This can be used as a feature by reposting a
+transaction with an unattractive fee with the same nonce and higher
+fee. Similarly, a user can post a whole series of transactions with
+increasing, but too large nonces. Only when the missing nonce is
+posted, all other transactions that possibly remained in transaction
+pools are enabled.
+
+\subsection{Aeternity naming system}
+\label{sect:aens}
+
+Transferring tokens to a registered name instead of a hard to remember
+public key, is a feature that is supported natively by Aeternity.
+For example, in a spend
+transaction the recipient can be given as a name. For that to work, a
+collection of 5 transactions are provided that
+resemble internet domain name (DNS) registration.
+
+One of the challenges in name registration is to offer a reasonably
+fair system for those that want a specific name. Imagine a user wants
+to reserve \textit{emin} as a name. (Since there is currently only one
+name space on the aeternity blockchain \textit{chain}, technically the
+user wants to claim \textit{emin.chain}.)
+A short name of size 4, like \textit{emin}, is a name that
+possibly many people like to claim. Just posting this name in a
+transaction would reveal to everyone monitoring the
+transaction pool that the name is attractive to at least someone. It
+is rather easy to
+immediately post the same name with a higher fee to have the leader
+pick that new transaction instead of the already posted request for
+the name \textit{emin}. This is called \textit{front running}, getting
+your transaction in front of an already posted transaction by paying a
+larger fee. Transaction pools are not under consensus, so there are no
+guarantees that front running would work, but if there are many
+transaction in the system and one does this within the micro-block
+creation time of 3 seconds, there is a fair chance that front running
+would work.
+
+In order to defend the users against front running, the first step in
+reserving a name is the \textbf{preclaim transaction}. In a pre-claim,
+one posts the hash of a combination of the name and a random number
+(called \textit{salt}). When the preclaim is accepted, you can
+post a claim transaction to obtain the actual name.
+The \textbf{claim transaction} is
+then used to either immediately obtain the name if the name is long
+enough (with current governance values, longer than 12 characters), or to start an
+auction. In both cases the
+claim transaction reveals the name and the salt.
+
+A fee is paid for the
+length of the name, shorter names are more expensive and the auction
+is open for a certain period expressed in blocks. For the 4 character
+name \textit{emin}, the price starts with 134.6269 AE tokens and the
+auction would be open 29760 blocks (approx 62 days) after the last valid bid.
+
+At the moment that someone posts a claim,  the name is known. A potential
+front running by quickly posting both a preclaim and a claim for the
+same name is mitigated by demanding the preclaim and the claim to be
+in different generations. In other words, the original claim can be
+added to the generation, whereas the new claim needs to wait until the
+next generation.
+
+After that the name is claimed, other users can see this name and
+claim it with a higher bid. Each bid must be at least 5\% higher than
+the previous bid in order to be a valid bid. Note that the bidder must
+have enough tokens and that those tokens are reserved in a claim. The
+previous bidder gets the tokens returned as soon as a higher bid is
+accepted. This means that this users has the funds available for a
+possible next bid.
+
+It is very well possible that two users preclaim the same name with
+different salt and then claim, but only one of them is accepted, the
+other is not. The rejected name claim transaction is not even seen as
+the next bid in an auction, even if the price would be higher. There
+is a subtle difference between a bidding claim and the original claim
+by the \textit{salt} being zero for a bid and non-zero for an original claim.
+
+After the auction, or for long names instantaneously, the highest
+bidder owns the name. An additional
+\textbf{update transaction} is needed to point the name to something (for example an
+account). Additionally there are a \textbf{transfer transaction} to
+change the owner of a name, and a \textbf{revoke transaction} to free the
+name.
+
+Names have a specific lifetime and there is an agreed maximum number of blocks one can wait
+between a pre-claim and a claim in order to succeed with the claim.
+Obviously, registered names expire after a while, unless renewed in time
+with the update transaction.
+
+When a name has been assigned to an owner and an update transaction
+has pointed this name to an account, then one can use the \textit{name
+  hash} of the name instead of an account in, for example, a spend
+transaction. The name hash function first converts the name to a unique value using the
+internationalized domain name standard IDNA \cite{idna2008}. This makes names
+case-insensitive and, in particular, it helps to uniquely map
+non-ascii characters. After that, the Blake2b hash is applied. This unique
+hash is then part of the transaction and the way the name is
+internally represented.
+IDNA is used, since there are well known attacks by using names that
+look similar to the human eye, but are different.
+
+It is important to realize that the names are part of the blockchain
+logic. A user should not trust any third party to perform a name lookup on
+chain and then substitute the name by an account. If a user want to
+transfer tokens to Emin, the user should put the name hash of \textit{emin.chain} in
+the transaction and sign this transaction.
+
+
+\subsection{Aeternity oracles}
+\label{sect:aeoracle}
+
+
+Smart contracts only operate on data that is on the
+blockchain. Oracles are a mechanism to bring external data about
+real-world state and events onto the blockchain. Data can either be
+obtained from large data sources, real-time data, or heavy computations.
+
+Typical external data may be useful for smart contracts. One can base
+a decision in a contract on the state of some external data. This can be sensor data or
+news events such as stock data, results of a match, supply chain data,
+etc.
+Researchers try to address the issue of trust in the authenticity of extrenal data
+\cite{zhang2016town,guarnizo2019pdfs, adler2018astraea}, but in
+general oracles provide data without robust security guarantees.
+
+Oracles are announced to the chain by a \textbf{register oracle
+  transaction}. This specifies in what format the oracle expects its
+queries ands in what format it is going to respond. Typically this is
+specified as a type signature. The register oracle transaction also
+includes the fee of the queries to this oracle. Each query must supply
+that fee in order to be answered. The query fee is the economic
+incentive for the oracle to provide information.
+
+When an oracle is registered on chain, any user can post a
+\textbf{query oracle transaction} with the rightly formatted query.
+The oracle supplier monitors the blockchain and will see this
+query and post an \textbf{oracle response transaction} with the answer
+to the query in the predefined format. In this way,
+the data becomes part of the data on the
+blockchain. This data can be referred to in a smart contract.
+
+\subsubsection{Data as a service}
+
+External data may come from a large database, possibly also accessible in different
+ways, but via the oracle made accessible on the blockchain. Typically
+one could think of supply chain data. If supply chain data is
+accessible via a trusted oracle, one could post an oracle query for
+last transaction on a specific item one ordered. Although the answer
+on such a query may be interesting and valuable in itself, the main
+purpose of asking for it would be to use it in a contract to transfer
+some tokens (goods have arrived in harbour, 20\%  of tokens are
+transferred).
+
+The above supply chain data may be anonymous enough to appear on a
+blockchain. There is, however a privacy issue, external data that is
+put on chain is made public. So, even if there might be an interesting
+use case, one must be careful with for example personal data. If one
+would have an airline oracle that given a last name and booking
+reference returns flight data ``date'', ``from'' and ``destination''
+airport, then this becomes public data. Having a contract pay the
+travel agent when the oracle returns that the correct date and flight has
+been booked, is therefore a bad idea. Even encrypting or decrypting the
+data in the contract would be a bad idea, since contract state and
+operations are visible.
+
+Moreover, one cannot get paid for the same data twice, because the
+first time it is posted, it becomes public. Therefore, typical data
+normally is rather anonymous or invaluable to others than involved
+parties, or is already/will become public, such as the weather or the
+outcome of a match. Point is that one can use data that becomes
+available in the future to base contractual decisions upon.
+
+\subsubsection{Off-chain computations}
+
+Oracles can also be used to perform heavy computations off-chain and
+then post the actual result on-chain. After all, Sophia and the amount
+of gas available would make it impossible to implement a chess
+calculator to propose the next good move. Implementing this as an
+oracle would work. One queries for a certain position and gets a best
+move response. Clearly, the chess hints are already freely available, which harms
+this business model more than the fact that hints for specific
+positions becomes public data.
+
+\subsubsection{Timing}
+
+Users that post a query would normally want a response rather
+quickly. Therefore, they can specify query TTL, either absolute
+or relative key-block heights. A relative query TTL of 2 assures
+that if the oracle does not answer within 2 key-blocks after the query
+is accepted onchain, the query fee is not paid. In fact, an answer that is too
+late, will not make it on chain and no contract can use it in a
+decision.
+
+Oracles have a specific lifetime, supplied in block height when
+registering the oracle. After that block height, queries to the oracle
+are no longer resulting in a response. The lifetime of an oracle can
+be extended using an \textbf{extend oracle transaction}.
+
+
+\subsubsection{A lottery example}
+
+An example of the use of oracles and contracts can be illustrated with
+a little lottery example. Note that all computation on a blockchain
+should be deterministic in order to be able to validate the
+results. If not exactly the same, the corresponding state hashes will
+differ. As a consequence there is no random number generator in the
+Sophia language\footnote{Even if some kind of random function would be
+  offered, it would be deterministic and hence have a predictable
+  outcome}.
+
+Running a simple lottery in which users buy a ticket and after a while
+one draws one of the tickets as the winner, is somehow depending on
+some kind of fair randomness. If the number is known or computable at
+the start of the buying process, one might be able to figure out what
+ticket to buy to win the lottery. But if we close the lottery and then
+ask an oracle for a random number, then a trusted, but disconnected
+computation can be used to draw the winner.
+
+So assume there is such an oracle, monitoring the chain and registered
+with a reasonable query fee covering for its cost of operation. The
+oracle has an identifier, for the example say
+\textit{"ok\_shEHMV8Q2F1HR86pcyF7DYpudg8hnvJwJuVE3berWpbktnL2R"}.
+We can now write a Sophia contract that takes this oracle identifier
+as input of its initialization and uses it for random numbers in the
+lottery game.
+
+\begin{verbatim}
+include "List.aes"
+
+contract Lottery =
+
+  record state = { participants : list(address),
+                   price_sum : int(),
+                   close_height : int(),
+                   oracle : oracle(int, int),
+                   query : option(oracle_query(int, int))  }
+
+  entrypoint init(rand : oracle(int, int)) : state =
+    { participants = [],
+      price_sum = 0,
+      close_height = 0,
+      oracle = rand,
+      query = None }
+\end{verbatim}
+
+The contract stores a list of participants in its state, a price sum
+that increases for each ticket bought, a closing height after which no
+new tickets can be purchased. The initial closing height is zero,
+because initially there is no ongoing lottery. The state also contains
+an oracle and an optional query. This query will be instantiated when
+the lottery is closed and a ticket is drawn.
+
+The creator of this contract may now start the lottery by supplying a relative closing height,
+for example, 20 key-blocks from that the transaction gets on chain;
+approximately one hour. Any user can then buy a ticket.
+\begin{verbatim}
+  stateful payable entrypoint start(n : int) =
+    require( Call.caller == Contract.creator, "not creator" )
+    require( state.price_sum == 0, "lottery ongoing" )
+    require( n > 1, "block in future")
+    put(state{ participants = [],
+               close_height = Chain.block_height + n })
+
+  stateful payable entrypoint buy() =
+    require( state.close_height > Chain.block_height, "lottery closed" )
+    require( Call.value == 10, "price ticket 10" )
+    put(state{ participants = Call.caller :: state.participants,
+               price_sum = state.price_sum + 8 })  // we take 20%
+\end{verbatim}
+Note that a lot of conditions are checked, resulting in abortion of
+the contract when falsified. In general, making the contract safe
+requires thinking through a large number of possible scenarios in
+which things may not work out as expected.
+For example, if no users buy a ticket\footnote{The price of the ticket
+is set to $10$ aettos instead of a more realistic  $10\_000\_000\_000\_000\_000$ to
+make the code more readable}, the contract creator must be
+able to restart the lottery at a later time, but the creator should
+not be able to restart as soon as there are participants. Similarly,
+one should not allow participants to buy tickets when the lottery is
+closed.
+
+The keyword \verb+payable+ expresses that we expect the participants
+to add a token amount to the contract call transaction, which is
+checked by comparing \verb+Call.value+. Similarly, the contract
+creator needs to pay something into the contract to cover the oracle query
+fee\footnote{Note that there is no check in the contract that it has
+  enough funds to query the oracle after starting a lottery. The
+  participants are at risk here} in case there are too few
+participants.
+
+When the closing height is reached, someone, most likely the creator
+of the contract, asks the oracle to draw a number between 1 and the
+number of participants. This call returns the query., such that anyone
+can monitor the chain to see if the query has arrived. When that's the
+case, the winner, or anyone else, can call the claim function, which
+will transfer the price sum to the winner.
+\begin{verbatim}
+ stateful entrypoint draw() : oracle_query(int, int) =
+     require( Chain.block_height > state.close_height, ongoing lottery" )
+     require( state.price_sum > 0, "no ongoing lottery" )
+     require( state.query == None, "already drawn" )
+     let q =
+        Oracle.query(state.oracle, List.length(state.participants) - 1,
+                     Oracle.query_fee(state.oracle),
+                     RelativeTTL(5), RelativeTTL(480))
+     put(state{query = Some(q)})
+     q
+
+  stateful entrypoint claim() : option(address) =
+    switch(state.query)
+        None => abort( "no drawing" )
+        Some(query) =>
+          switch( Oracle.get_answer(state.oracle, query))
+             None => abort("waiting for query")
+             Some(winner) =>
+               let winner_account = List.get(winner, state.participants)
+               // Spend to winner
+               Chain.spend(winner_account, state.price_sum)
+               put(state{ price_sum = 0, query = None })
+               Some(winner_account)
+\end{verbatim}
+
+The reason to make it possible for anyone to call these functions is
+to ensure that the contract creator can force progress to start a new
+lottery and the winner to be able to claim even if the contract owner
+is not around. The TTLs in the query assure that the oracle has
+approximately 15 minutes to answer, long enough to even get it out
+in busy times. Within a day one then has to claim the price sum,
+otherwise, because the query answer is then no longer on chain.
+
+This contract is far from fully secure, but illustrates an example of
+how oracles and contracts can be used together. An easier way to
+get a reasonable random number is to use the hash of the key-block at
+closing height.
+
+
+
+
+\subsection{Generalized accounts}
+\label{sect:ga}
+
+Generalized accounts are a way to provide more flexibility to signing
+transactions. Both the nonce handling and the signature checking are
+done by a smart contract that is attached to the account. This can,
+for example, be useful when one would allow users to sign transactions with
+other cryptographic primitives than the default\footnote{Some hardware
+  devices may be restricted to other cryptographic signing algorithms
+  than the default on the aeternity blockchain.} EdDSA as mentioned in
+Sect.\ \ref{sect:transactions}.
+
+If a user wants to have a generalized account, then this user must
+provide a smart contract in a \textbf{attach transaction}. This
+contract is thereafter attached to the given account. The contract
+must have an authentication function that returns a boolean whether or
+not authentication is successful. The attach transaction itself is
+just like all previously mentioned transactions signed in the default
+way. It turns a normal account into a generalized account, and
+\textit{there is no way back}.
+
+When an account is a generalized account, any transaction can
+be wrapped in a so called \textbf{meta transaction}. That is, one
+prepares an ordinary transaction in the usual way, but with a nonce set to
+zero. After that, one adds additional fee, gas and authentication data to
+run the smart contract. When this transaction is processed, the
+authentication function in the smart contract associated with the
+account is called with the provided authentication data as input. If
+the authentication fails the transaction is discarded, otherwise its
+inner transaction is processed.
+
+The following smart contract is an example that allows signing with
+the ECDSA algorithm \cite{johnson2001elliptic} and the popular elliptic curve
+Secp256k1, used for example by Bitcoin and Ethereum
+\cite{bos2014elliptic, mayer2016ecdsa}.
+
+\begin{verbatim}
+contract ECDSAAuth =
+  record state = { nonce : int, owner : bytes(20) }
+
+  entrypoint init(owner' : bytes(20)) = { nonce = 1, owner = owner' }
+
+  stateful entrypoint authorize(n : int, s : bytes(65)) : bool =
+    require(n >= state.nonce, "Nonce too low")
+    require(n =< state.nonce, "Nonce too high")
+    put(state{ nonce = n + 1 })
+    switch(Auth.tx_hash)
+      None          => abort("Not in Auth context")
+      Some(tx_hash) =>
+        Crypto.ecverify_secp256k1(to_sign(tx_hash, n), state.owner, s)
+
+  function to_sign(h : hash, n : int) : hash =
+    Crypto.blake2b((h, n))
+
+\end{verbatim}
+
+The contract is initialized by providing the public key used for
+signing and the nonce (in the contract state) is set to 1. The
+authentication function takes two parameters, the nonce and the signature.
+The authorization function checks that the nonce is correct, and then
+proceeds to fetch the TX hash from the contract environment using
+\verb+Auth.tx_hash+. In this example the signature is for the Blake2b
+hash of the tuple of the transaction hash and the nonce). The
+authorization finally checks that the private key used for signing the
+hash was from the owner.
+
+
+By attaching this contract to an aeternity account, users can sign
+aeternity transactions with their bitcoin private key. They need to
+keep track, of course, what nonces they have used for this contract,
+to provide the right next nonce.
+
+\subsubsection{Security considerations}
+
+Before the authentication is performed, there is no account that one
+can charge for the computational effort of running the authentication
+function. After all, anyone could wrap a transaction in a \textbf{meta
+  transaction} and submit it. It would be an easy attack to empty a
+generalized account if the account had to pay for failed authorization
+attempts. So, the gas for authentication is only charged when
+successful. This opens up for another unpleasant attack.
+
+Since there is no cost involved for the user to run an authentication
+function, but the miner needs to spend execution cycles, one could
+potentially write a complex function as authentication function and
+extract resources from a miner by calling one's own authentication
+function with failing input data. This is mitigated by not allowing
+expensive chain operations in an authentication call. Moreover, miners
+are free to implement any sophisticated rules for accepting
+transactions in their mining pool, such that they can reject this
+behaviour when observed.
+
+Using different signature algorithms is only one of many possible uses
+of generalized accounts. Other uses cases can be multi-sig, spending
+limits (per week/month), limiting the transaction types, and more. For
+these applications smart contracts have to be written. Utmost care
+needs to be taken when implementing the authorization
+function in these smart contracts. If the contract does not enforce
+integrity checking or replay protection, then it will be vulnerable to
+abuse.
+
+
+\subsection{Financing transaction costs}
+\label{sect:payingfor}
+
+In order to make users enthusiastic about a blockchain application,
+one may want them to try it for free. However, there are always costs
+involved for transaction and gas. This means that a new user has to
+buy tokens at some exchange to pay for the fees. This can be considered
+a hurdle for adoption. Of course, one can ask a user for an account and put
+some tokens on it, but then those tokens can be used for anything.
+The aeternity solution is more powerful and can be used to pay for
+just specific transactions.
+
+Assume a game played via a contract on the blockchain. One interacts
+with the game, by calling the contract. In order to get more users for
+the game, the game provider could make an App that visualizes
+the game and asks for a next move. This App could automatically create
+an aeternity account, even without the user being aware of it. This
+account can be used to sign transactions on the blockchain, but there
+are no tokens in the account. This move is then encoded in a
+transaction signed by the players account in the App. The transaction
+is submitted to the game provider, who inspects it to see that this
+is indeed a move in the game and wraps it in a \textbf{payingfor
+  transaction} signed by the game provider. The gas and fee are now
+paid by the game provider's account.
+Clearly this is also a way to have some trustful cross-chain
+activity. The App user could provide the game provider with funds on a
+different blockchain.
+
+One can pay for any transaction apart from the payingfor transaction
+itself. So even a generalized accounts meta transaction can be paid
+for, as long as it recursively does not contain any other payingfor
+transaction.

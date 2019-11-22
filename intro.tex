@@ -1,0 +1,62 @@
+\section{Introduction}
+
+Blockchain technology has been attracting a lot of attention since the
+first blockchain was proposed by Nakamoto~\cite{SN} in 2008.
+Many blockchain platforms are being developed to serve the next
+generation of applications. The novelty of the field provides an
+interplay between developers offering new features, enabling new
+applications to be written by application developers, and application
+developers therewith requiring additional features or possibilities.
+
+Aeternity~\cite{AE,UlfWigerCodeMesh2018} is an open source blockchain
+platform aiming at being a development platform for
+advanced blockchain applications that can be used by millions of
+users. Several key technologies are put in place to meet these scaling
+requirements, most notably the state channels, the next generation of
+Nakamoto consensus algorithm and the very efficient FATE virtual
+machine for smart contract execution.
+
+The plaform runs as a decentralized trustless distributed
+ledger with Proof-of-Work (PoW) protected consensus \cite{Tromp2015CuckooCA}.
+In Sect.~\ref{sect:mining} we explain how we improve scalability of traditional
+block mining by combining it with the Bitcoin NG technology
+\cite{Eyal:2016:BSB:2930611.2930615}. The result of this change
+is a throughput of about 100 on-chain transactions per second.
+
+Further scaling, towards thousands of transactions per second, is
+realized by state channels \ref{sect:channels}, an off-chain encrypted
+peer-to-peer communication protocol. After agreeing on-chain to
+collaborate in a state channel, parties communicate mutually signed
+transactions to each other. Closing the channel, with or without
+dispute resolution, is performed on-chain again.
+
+The aeternity blockchain offers a variety of different transactions originating from commonly
+used applications on other blockchain implementations. For example, by
+identifying that some chains implement a way to claim a name for
+something on a chain, the aeternity blockchain provides a set of
+transactions that make this easy for developers, without the need to
+implement a smart contract for it. Another example is a set of transactions to register and
+query oracles. These transactions are explained in more detail in
+Sect.\ \ref{sect:transactions}.
+
+Many features are yet to be invented, but can already be implemented
+by users if they use the Aeternity smart contract language
+\textit{Sophia}. Sophia is a Turing complete functional language
+designed with security in mind. Many mistakes that one can make in
+other contract languages are impossible to make or are easier to detect
+when using Sophia. In Sect.\ \ref{sect:sophia} we present some key
+ideas of the language.
+
+Contracts are compiled to bytecode, which is executed on a highly
+efficient virtual machine \textit{FATE}. Similar to other smart contract
+languages every operation has a gas cost associated to it. This cost reflects
+the amount of work needed to execute a contract. The FATE virtual machine is specifically designed for
+Aeternity to meet the high security and efficiency demands, which we
+explain in more detail in Sect.~\ref{sect:fate}.
+
+Aeternity is implemented in the functional language Erlang
+\cite{Armstrong:2010:ERL:1810891.1810910} originating from the
+telecommunication industry and used in large distributed and
+concurrent systems (e.g.\ WhatsApp). However, the choice
+of implementation language has no further
+implications for the techniques used and described in this paper.

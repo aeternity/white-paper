@@ -1,0 +1,53 @@
+%
+% The first command in your LaTeX source must be the \documentclass command.
+\documentclass{paper}
+
+\usepackage[]{todonotes} % notes not showed
+%% \usepackage[draft]{todonotes}   % notes showed
+
+\usepackage{hyperref}
+\usepackage{graphics}
+\usepackage{multicol}
+
+%
+% \BibTeX command to typeset BibTeX logo in the docs
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    \normalfont B\kern-0.5em{\scshape i\kern-0.25em b}\kern-0.8em\TeX}}}
+
+\begin{document}
+
+%
+% The "title" command has an optional parameter, allowing the author to define a "short title" to be used in page headers.
+\title{The Aeternity blockchain}
+\subtitle{White paper}
+
+\author{The Aeternity team}
+
+\maketitle
+
+%
+% The abstract is a short summary of the work to be presented in the article.
+% \begin{abstract}
+% The Aeternity blockchain aims to be a development platform for advanced blockchain applications that can be used by millions of users.
+% This is realised by giving easy developer access to commonly used \textbf{blockchain features}, such as \textit{spend} transactions, \textit{oracle} query and response transactions and a possibility to register names on the blockchain via \textit{name} transactions. These features are widely used with other blockchains and are simply and cheaply accessible in the aeternity blockchain. In addition, the aeternity blockchain has it own contract language, called \textit{Sophia} which let application developers build applications as advanced as they can imagine. Of course, the contracts work seamlessly with the native transactions for spend, oracles, names and future extensions of the transaction types. Learning from mistakes in other blockchain languages, Sophia and the Sophia Virtual Machine are designed with security in mind. Many programmer errors that can be exploited in other languages, cannot be made in the functional language Sophia or its dedicated, super fast, virtual machine.
+
+% Not only should a blockchain development platform be powerful and feature-rich, it also needs to \textbf{scale} well to be able to serve millions of users. The aeternity blockchain realises \textit{state channels} for this purpose, a way to register some transactions on chain and allow many transactions in an off-chain peer-to-peer network; only after many mutually agreed transactions a closing transactions may be visible on chain again. The second way to scale the aeternity blockchain is to use the technique of bitcoin NG in which two kind of blocks are distinguished: key-blocks that are mined and micro-blocks that contain transactions. The miner of a key-block is the leader for as long as no new key-block is mined (which takes roughly 3 minutes on the aeternity chain). During that period, the leader may post transactions in microblocks with a density of 3 seconds between blocks. Since each micro-block may contain 300 transactions, one can theoretically get 100 transactions per second on chain.
+
+% In this white paper we explain the above mentioned concepts of the aeternity blockchain and highlight the design decisions taken.
+% \end{abstract}
+
+\keywords{blockchain, state channels}
+
+
+\input{intro.tex}
+\input{mining.tex}
+\input{scaling.tex}
+\input{sophia.tex}
+\input{transactions.tex}
+% \input{related.tex}
+%\input{conclusions.tex}
+
+\bibliographystyle{acm} \bibliography{paper}
+
+\end{document}
