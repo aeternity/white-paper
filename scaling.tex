@@ -11,31 +11,42 @@ want confirmation times in milliseconds and perform more advanced
 computations than 6 million gas would allow, then state channels come to the rescue.
 
 Conceptually one can regard a state channel as an agreement between
-two parties to start a little transaction chain on the side. Only the
+two parties to build a chain of state changes on the side. Only the
 agreeing parties have access to this chain in the so called
-\textit{state channel}. The notion of state comes from the fact that
-when starting the transaction chain, the parties agree the initial
+\textit{state channel}. The parties agree the initial
 state of this chain. Typically, the state would
 contain some initial accounts for the involved parties in which they
 reserve some tokens from the aeternity blockchain for transactions in
-the channel.
+the channel. Then they post a joinedly signed transaction on-chain to
+confirm that this is the initial state.
+The amounts the initial amounts are then reserved on-chain and cannot
+be used on-chain until they are released.
+
+Apart from initial amounts,
+they also post the hash of the channel state tree: the state the
+parties do agree upon. By only submitting the hash, the actual state
+is kept private to the channel, both parties know, but they need not
+reveal it.
+
+If only accounts are used in a state channel, one can consider it a
+payment channel. However, one can also agree upon a contract in the
+channel, either initially, or added later. In this way, one can also
+perform contract calls to update the state of the channel.
+
+The state representation is determined by the state channel
+implementation and different implementations may in theory use each
+their own representation. The state hash is what is visible on-chain
+and what parties agree upon in their transactions.
+In case of dispute resolution, the
+latest agreed, mutually signed, state hash can be posted to the aeternity blockchain.
 
 \subsection{On-chain and off-chain transactions}
 
-\textbf{Hans: I think the focus of the following sections is wrong. It is called
-state channels, not transaction channels, the focus should be on the
-mutually agreed state. Also only contract create/call (and token transfer) make
-sense in a channel so "all transactions" is wrong. I also think the presentation
-might be easier to follow if we do the separation into payment channels and fully
-fledged state channels?!}
-
-In Aeternity, transactions that can be posted to the aeternity
-blockchain can also be posted in the state channel. In this way parties
-create their own state from a sequence of transactions, without any
-mining involved. Instead of
-creating key or micro-blocks, the transactions are just
-directly applied to update the state. This requires that many of these
-transactions are signed by both parties to make sure that only states
+In a state channel impementatioin users communicate peer-to-peer with
+each other, using mutually signed transactions that include state
+hashes. In this way parties agree upon a state, without any
+mining involved. Instead of creating key or micro-blocks, the transactions are just
+directly applied to update the state. Only states
 jointly agreed upon are recorded. This also
 means that there are no transaction or gas costs involved\footnote{In a state
 channel parties can agree to have a kind of transaction cost, but it
@@ -43,7 +54,7 @@ is not the default implementation} and most notably that a transaction
 is confirmed as quickly as both parties can sign it. This confirmation
 time can therewith be reduced to milliseconds.
 
-A typical use-case for a state channel\todo{this is an example of a payment channel} is a subscription model, for
+A typical use-case for a state channel, or rather a payment channel, is a subscription model, for
 example a coffee ``account'' with 25 cups of coffee. Each time one
 orders a coffee, the coffee shop
 creates a transaction to update the state and both shop
@@ -66,8 +77,8 @@ per second is no technical limitation, but possibly hard to achieve as
 a business.
 
 The coffee subscription only includes two accounts and off chain
-payments from one of these accounts to the other. The Aeternity state
-channels can deal with all aeternity transaction types.\todo{This is wrong!} Notably one
+payments from one of these accounts to the other.
+Notably one
 can create contracts in a channel or refer in a channel to contracts
 created on the blockchain. We discuss contracts in Sect.\
 \ref{sect:sophia}, but one use case is to implement a game playing
@@ -114,15 +125,24 @@ been reached. Imagine the above mentioned tic-tac-toe game contract,
 where the funds are re-distributed only after that one party has
 won. It could then be beneficial for a party to quit the
 game when loosing and solo close, or to simply refuse to sign the last
-transaction. Quitting when one expects to loose
+transaction.
+
+Quitting when one expects to loose
 harms the other party, because there is no next state that is more
 beneficial than the initial state. For this purpose the other party
 can then force progress the contract and move to the winning
 state. That is, the party can perform a contract call and show that it
 ends up in state that can be claimed the actual final state for which
-the channel should be closed. Clearly, a number of different counter
+the channel should be closed. This force progress requyires more than
+just the state hash, here a state has to be revealed that can be used
+by the aeternity blockchain to execute the next step in the
+contract. This requires to folllow a predefined format for the state trees.
+
+Clearly, a number of different counter
 measures are present for the other party in case a malicious force
-progress transaction is posted.
+progress transaction is posted. It is also clear that the state of the
+state channel has to be made public (at least partly) to settle a
+contract dispute in a force progress transaction.
 
 Users should keep in mind that, by using a state channel, they trade
 transaction efficiency and lower transaction fees for some reduction in
