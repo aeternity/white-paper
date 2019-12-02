@@ -1,7 +1,7 @@
 \section{Transaction types}
 \label{sect:transactions}
 
-The aeternity blockchain offers a plurality of different transactions
+The Aeternity blockchain offers a plurality of different transactions
 types, designed to simplify application development for features that are
 common or popular in the blockchain sphere. By using smart contracts,
 users can develop completely new features themselves, but for already
@@ -78,7 +78,7 @@ resemble internet domain name (DNS) registration.
 One of the challenges in name registration is to offer a reasonably
 fair system for those that want a specific name. Imagine a user wants
 to reserve \textit{emin} as a name. (Since there is currently only one
-name space on the aeternity blockchain \textit{chain}, technically the
+name space on the Aeternity blockchain \textit{chain}, technically the
 user wants to claim \textit{emin.chain}.)
 A short name of size 4, like \textit{emin}, is a name that
 possibly many people like to claim. Just posting this name in a
@@ -404,7 +404,7 @@ done by a smart contract that is attached to the account. This can,
 for example, be useful when one would allow users to sign transactions with
 other cryptographic primitives than the default\footnote{Some hardware
   devices may be restricted to other cryptographic signing algorithms
-  than the default on the aeternity blockchain.} EdDSA as mentioned in
+  than the default on the Aeternity blockchain.} EdDSA as mentioned in
 Sect.\ \ref{sect:transactions}.
 
 If a user wants to have a generalized account, then this user must
@@ -462,8 +462,8 @@ authorization finally checks that the private key used for signing the
 hash was from the owner.
 
 
-By attaching this contract to an aeternity account, users can sign
-aeternity transactions with their bitcoin private key. They need to
+By attaching this contract to an Aeternity account, users can sign
+Aeternity transactions with their bitcoin private key. They need to
 keep track, of course, what nonces they have used for this contract,
 to provide the right next nonce.
 
@@ -506,14 +506,14 @@ involved for transaction and gas. This means that a new user has to
 buy tokens at some exchange to pay for the fees. This can be considered
 a hurdle for adoption. Of course, one can ask a user for an account and put
 some tokens on it, but then those tokens can be used for anything.
-The aeternity solution is more powerful and can be used to pay for
+The Aeternity solution is more powerful and can be used to pay for
 just specific transactions.
 
 Assume a game played via a contract on the blockchain. One interacts
 with the game, by calling the contract. In order to get more users for
 the game, the game provider could make an App that visualizes
 the game and asks for a next move. This App could automatically create
-an aeternity account, even without the user being aware of it. This
+an Aeternity account, even without the user being aware of it. This
 account can be used to sign transactions on the blockchain, but there
 are no tokens in the account. This move is then encoded in a
 transaction signed by the players account in the App. The transaction

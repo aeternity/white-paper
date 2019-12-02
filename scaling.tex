@@ -1,48 +1,50 @@
 \section{Scaling with state channels}
 \label{sect:channels}
 
-The NG technology mentioned in the previous section improves
+The NG technology explained in the previous section improves
 scalability by faster preliminary confirmation times for
 transactions. It also lifts the restriction of a maxiumum number of transactions in a
 generation; when it takes longer to produce the next key-block,
 additional micro-blocks can be generated containing new transactions.
 This benefits throughput and confirmation times. But if parties really
-want confirmation times in milliseconds and perform more advanced
+want confirmation times in milliseconds range and perform more advanced
 computations than 6 million gas would allow, then state channels come to the rescue.
 
 Conceptually one can regard a state channel as an agreement between
-two parties to build a chain of state changes on the side. Only the
+two parties, further called \textit{participants}, to build a chain
+of state changes on the side. Only the
 agreeing parties have access to this chain in the so called
-\textit{state channel}. The parties agree the initial
+\textit{state channel}. The parties agree on the initial
 state of this chain. Typically, the state would
 contain some initial accounts for the involved parties in which they
-reserve some tokens from the aeternity blockchain for transactions in
+reserve some tokens from the Aeternity blockchain for transactions in
 the channel. Then they post a joinedly signed transaction on-chain to
 confirm that this is the initial state.
-The amounts the initial amounts are then reserved on-chain and cannot
-be used on-chain until they are released.
+The initial amounts are then reserved on-chain and cannot
+be used on-chain until they are released from the state channel.
 
 Apart from initial amounts,
-they also post the hash of the channel state tree: the state the
+the participants also post the hash of the channel's state-tree: the state the
 parties do agree upon. By only submitting the hash, the actual state
 is kept private to the channel, both parties know, but they need not
 reveal it.
 
 If only accounts are used in a state channel, one can consider it a
-payment channel. However, one can also agree upon a contract in the
+payment channel, a simpler purpose-specific form of a state channel.
+However, one can also agree upon a contract in the
 channel, either initially, or added later. In this way, one can also
 perform contract calls to update the state of the channel.
 
 The state representation is determined by the state channel
-implementation and different implementations may in theory use each
+implementation and different implementations may in theory use
 their own representation. The state hash is what is visible on-chain
 and what parties agree upon in their transactions.
 In case of dispute resolution, the
-latest agreed, mutually signed, state hash can be posted to the aeternity blockchain.
+latest agreed, mutually signed, state hash can be posted to the Aeternity blockchain.
 
 \subsection{On-chain and off-chain transactions}
 
-In a state channel impementatioin users communicate peer-to-peer with
+In a state channel users communicate through a peer-to-peer mechanism with
 each other, using mutually signed transactions that include state
 hashes. In this way parties agree upon a state, without any
 mining involved. Instead of creating key or micro-blocks, the transactions are just
@@ -50,13 +52,13 @@ directly applied to update the state. Only states
 jointly agreed upon are recorded. This also
 means that there are no transaction or gas costs involved\footnote{In a state
 channel parties can agree to have a kind of transaction cost, but it
-is not the default implementation} and most notably that a transaction
+is not the default setup} and most notably that a transaction
 is confirmed as quickly as both parties can sign it. This confirmation
 time can therewith be reduced to milliseconds.
 
-A typical use-case for a state channel, or rather a payment channel, is a subscription model, for
-example a coffee ``account'' with 25 cups of coffee. Each time one
-orders a coffee, the coffee shop
+A typical use-case for a state channel, or rather a payment channel, is a
+subscription model, e.g. a coffee ``account'' with 25 cups of coffee.
+Each time one orders a coffee, the coffee shop
 creates a transaction to update the state and both shop
 and customer sign this transaction. They agree upon the new state.
 Since it would be annoying to have to wait 3 minutes or even 3 seconds
@@ -68,10 +70,10 @@ blockchain need to monitor the customers coffee consumption.
 Scaling is achieved by performing transactions \textit{off-chain},
 i.e.\ transaction in the channel. One starts with an \textit{on-chain}
 transaction agreeing and verifying a starting state and balance. After
-that many transaction can be performed without involving the aeternity
+that many transaction can be performed without involving the Aeternity
 blockchain. A coffee shop could have thousands of customers, all buying coffee and none of
 this puts transaction pressure on the blockchain. Only after
-terminating or topping up of a subscription, a new on-chain
+terminating or topping up a subscription, a new on-chain
 transaction should be recorded. Having a thousand cups of coffee paid
 per second is no technical limitation, but possibly hard to achieve as
 a business.
@@ -81,10 +83,10 @@ payments from one of these accounts to the other.
 Notably one
 can create contracts in a channel or refer in a channel to contracts
 created on the blockchain. We discuss contracts in Sect.\
-\ref{sect:sophia}, but one use case is to implement a game playing
+\ref{sect:sophia}, but one use case is to implement a game-playing
 contract (e.g.\ tic-tac-toe) and refer to that contract when playing the
 game in a channel. In such use-cases it is also an advantage to be
-able to play quickly and not having to wait 3 seconds before once move
+able to play quickly and not having to wait 3 seconds before a participant's move
 is included in a transaction.
 
 \subsection{Disputes}
@@ -92,19 +94,19 @@ is included in a transaction.
 A state channel requires both parties to sign each state to make
 sure the state is agreed upon. Typically a state channel can be closed
 under mutual agreement and then a closing transaction is used to
-re-distributed and return the reserved balances to the on-chain
+re-distribut and return the reserved balances to the on-chain
 accounts. Another way to extract reserved funds from a state channel
-is to mutually agree upon a withdraw from the channel to an account of
+is to mutually agree upon a withdrawal from the channel to an account of
 one of the parties. Typically, topping up a subscription would be done
 in combination with the coffee shop withdrawing part of the funds in
 the channel.
 
 But there might be disputes. For example, a customer
 could decide not to cancel a subscription, but keep an empty account
-in the state channel for ever. This is disadvantageous for the shop,
+in the state channel forever. This is disadvantageous for the shop,
 because it cannot extract the funds from the already paid coffee in
 mutual agreement. For this reason, there is a solo close transaction,
-a way for one party to close the channel on-state and use the last
+a way for one party to close the channel on-chain and use the last
 signed and agreed state as a proof on how the funds should be divided.
 
 Clearly, there is plethora of scenarios in which one can try to
@@ -135,8 +137,8 @@ state. That is, the party can perform a contract call and show that it
 ends up in state that can be claimed the actual final state for which
 the channel should be closed. This force progress requyires more than
 just the state hash, here a state has to be revealed that can be used
-by the aeternity blockchain to execute the next step in the
-contract. This requires to folllow a predefined format for the state trees.
+by the Aeternity blockchain to execute the next step in the
+contract. This requires to folllow a predefined format for the state-trees.
 
 Clearly, a number of different counter
 measures are present for the other party in case a malicious force
