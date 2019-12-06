@@ -76,7 +76,7 @@ transaction should be recorded. Having a thousand cups of coffee paid
 per second is no technical limitation, but possibly hard to achieve as
 a business.
 
-The coffee subscription only includes two accounts and off chain
+The coffee subscription only includes two accounts and off-chain
 payments from one of these accounts to the other.
 Notably one
 can create contracts in a channel or refer in a channel to contracts
@@ -92,7 +92,7 @@ is included in a transaction.
 A state channel requires both parties to sign each state to make
 sure the state is agreed upon. Typically a state channel can be closed
 under mutual agreement and then a closing transaction is used to
-re-distributed and return the reserved balances to the on-chain
+re-distribute and return the reserved balances to the on-chain
 accounts. Another way to extract reserved funds from a state channel
 is to mutually agree upon a withdraw from the channel to an account of
 one of the parties. Typically, topping up a subscription would be done
@@ -127,13 +127,13 @@ won. It could then be beneficial for a party to quit the
 game when loosing and solo close, or to simply refuse to sign the last
 transaction.
 
-Quitting when one expects to loose
+Quitting when one expects to lose
 harms the other party, because there is no next state that is more
 beneficial than the initial state. For this purpose the other party
 can then force progress the contract and move to the winning
 state. That is, the party can perform a contract call and show that it
 ends up in state that can be claimed the actual final state for which
-the channel should be closed. This force progress requyires more than
+the channel should be closed. This force progress requires more than
 just the state hash, here a state has to be revealed that can be used
 by the aeternity blockchain to execute the next step in the
 contract. This requires to folllow a predefined format for the state trees.
