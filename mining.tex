@@ -10,7 +10,7 @@ hashes are collision resistant, making it very unlikely that two binaries
 result in the same 32 bytes hash. It is also cryptographically hard
 to find a binary that results in a given hash.
 
-The sequence of cryptographic hashes in a blockchain avoid
+The sequence of cryptographic hashes in a blockchain avoids
 that a transaction on the chain is tampered with. If a transaction
 changes with even one bit, the hash of the block will change and the
 next block will point to a non-existing hash. An attacker that
@@ -33,12 +33,14 @@ computation bound.
 
 In a distributed system, like the aeternity blockchain, there are many
 computers (nodes) that together build the blockchain. Each of these nodes
-can receive user signed transactions. Each of them will try to build a
-block of these transactions and put it on the chain. Adding the next
-block to the chain is rewarded directly with tokens. As soon as they
+can receive user signed transactions. Some of them will try to build a
+block of these transactions and put it on the chain. Those nodes are
+sloppily called the \textit{miners}. Adding the next
+block to the chain is rewarded directly with tokens. As soon as miners
 have created such a block and solved the corresponding cryptographic
-puzzle, they gossip it to the other nodes in the network. This results
-in the evident challenge for each node to decide  which of the blocks
+puzzle (solving the puzzle is the actual mining part), they gossip it
+to the other nodes in the network.
+This causes the evident challenge for each node to decide  which of the blocks
 it receives is the one that is the next block for the chain. There
 must be a commonly agreed best block.
 
@@ -99,8 +101,8 @@ highest difficulty.
 
 A different kind of fork is created when one part of the nodes does
 not accept a block that the other nodes do accept as a valid block. This
-can be caused by having the nodes run different versions of the
-software that have an incompatibility. These forks are not
+can be caused by having the nodes run incompatible versions of the
+protocol. These forks are not
 automatically restored and are referred to as \textit{hard forks}.
 
 \subsection{Scaling transaction confirmations}
@@ -109,7 +111,7 @@ A user that submits a transaction has to wait for the transaction to
 be part of a block, before it can be considered a valid
 transaction. In fact, due to the previously described fork possibility due
 to network latency, one may have to see the transaction in a block
-followed by two more blocks to be reasonably sure that the chain will
+followed by a few more blocks to be reasonably sure that the chain will
 perpetually keep that transaction. The longer one waits, the more certainty.
 
 A transaction may be invalid for several reasons and even valid
@@ -201,7 +203,7 @@ micro-block creation timestamp.
 
 In order to mitigate the risk of a leader forking its own sequence,
 there is a mechanism in place to detect and report this by submitting
-a Proof-of-Fraud. This is typically submitted in the next
+a Proof-of-Fraud. This is submitted in the next
 generation. The leader is punished by not receiving a block reward and
 in order to make that possible, block rewards are not immediately paid out but kept for
 the duration of 180 blocks.
