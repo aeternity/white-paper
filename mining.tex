@@ -170,11 +170,17 @@ arrives, because, if a miner is slow in updating the puzzle and finds a solution
 micro-block, then all following micro-blocks are discarded. This is
 called a micro-fork, a key-block is mined on a micro-block that is not
 the last micro-block produced. Compared to forks on key-blocks,
-micro-forks occur relatively often. The
+micro-forks occur relatively often (cf.\ red micro-block in Fig.\ \ref{ng-mining}). The
 transactions of the produced and discarded micro-blocks are put back in the
 transaction pool and taken care of by the next leader. Since they have
 been seen in a micro-block before, they will very likely be valid in
-future micro-block as well. In Aeternity there is an incentive to mine
+future micro-block as well.
+
+Note that if a fork appears (cf. the red
+key-block following the red-micro-block in Fig.\ \ref{ng-mining} then
+the highest difficulty of the fork counts to see which branch will
+make it on chain. Most likely, the red branch will win.
+In Aeternity there is an incentive to mine
 on top of the newest micro-block, because the fees are divided by rewarding 40\%
 to the leader producing a micro block and 60\% to the miner mining the key-block after that
 micro-block\footnote{Note that if miners
@@ -182,8 +188,9 @@ micro-block\footnote{Note that if miners
   chain at all.}.
 
 \begin{figure}
-   \includegraphics[scale=0.5]{keymicro.jpg}
-  \caption{Micro forks}
+   \includegraphics[scale=0.3]{keymicro.jpg}
+   \caption{Next generation consensus}
+   \label{ng-mining}
 \end{figure}
 
 \subsubsection{Fraudulent leaders}
