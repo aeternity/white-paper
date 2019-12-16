@@ -40,7 +40,7 @@ implementation, contract execution is performed in a
 \textit{virtual machine}. This is an execution engine with formally
 defined semantics, such that all implementations perform exactly the
 same computation steps, with exactly the same result and charging
-exactly the same amount of gas. The aeternity blockchain defines two virtual
+exactly the same amount of gas. The \blockchain\ defines two virtual
 machines, the AEVM, compatible to the Ethereum blockchain, and the more
 efficient FATE virtual machine.
 
@@ -57,15 +57,13 @@ avoid the possibility to make such mistakes in Sophia.
 
 \subsection{The Sophia language}
 
-\todo{Mention calling a contract  from a contract}
-
 Sophia is a functional language \cite{hughes1989functional}.
 The main unit of code in Sophia is the \textit{contract}.
 A contract implementation, or simply a contract, is the code for a
 smart contract and consists of a list of types, entrypoints and local
 functions. Only the entrypoints can be called from outside the
 contract.   A \textit{contract instance} is an entity living on the
-block chain (or in a state channel). Each instance has an address that
+blockchain (or in a state channel). Each instance has an address that
 can be used to call its entrypoints, either from another contract or
 in a call transaction.  A contract may define a type \texttt{state}
 encapsulating its local state. When creating a new contract the
@@ -149,7 +147,7 @@ before the call is made. If, however, the call is reverted by a failing
 \texttt{require}d condition, then the provided tokens are returned.
 
 The transparency of the blockchain guarantees that it is verifiable
-that the first valid bid on chain\footnote{The blockchain
+that the first valid bid on chain\footnote{The \blockchain\
   does not guarantee that the first one posting a valid bid becomes
   the first one on chain.} is correctly paying the right
 price. Moreover, it is verifiable that the bidding call transactions accepted later are
@@ -207,7 +205,7 @@ FATE ultimately a safer coding platform for smart contracts.
 FATE uses high level instructions. There are instructions to operate
 on the chain state tree in a safe and formalized way. Likewise the
 virtual machine has high level support for most of the transactions
-available on the aeternity blockchain. There are operations such as
+available on the \blockchain. There are operations such as
 `ORACLE\_CHECK\_QUERY' for querying an oracle or `AENS\_CLAIM' for
 claiming a name.
 

@@ -1,7 +1,7 @@
 \section{Transaction types}
 \label{sect:transactions}
 
-The aeternity blockchain offers a plurality of different transactions
+The \blockchain\ offers a plurality of different transactions
 types, designed to simplify application development for features that are
 common or popular in the blockchain sphere. By using smart contracts,
 users can develop completely new features themselves, but for already
@@ -78,7 +78,7 @@ resemble internet domain name (DNS) registration.
 One of the challenges in name registration is to offer a reasonably
 fair system for those that want a specific name. Imagine a user wants
 to reserve \textit{emin} as a name. (Since there is currently only one
-name space on the aeternity blockchain \textit{chain}, technically the
+name space on the \blockchain\ \textit{chain}, technically the
 user wants to claim \textit{emin.chain}.)
 A short name of size 4, like \textit{emin}, is a name that
 possibly many people like to claim. Just posting this name in a
@@ -278,7 +278,9 @@ computation can be used to draw the winner.
 So assume there is such an oracle, monitoring the chain and registered
 with a reasonable query fee covering for its cost of operation. The
 oracle has an identifier, for the example say
-\textit{"ok\_shEHMV8Q2F1HR86pcyF7DYpudg8hnvJwJuVE3berWpbktnL2R"}.
+\begin{quote}
+  \textit{"ok\_shEHMV8Q2F1HR86pcyF7DYpudg8hnvJwJuVE3berWpbktnL2R"}.
+\end{quote}
 We can now write a Sophia contract that takes this oracle identifier
 as input of its initialization and uses it for random numbers in the
 lottery game.
@@ -404,7 +406,7 @@ done by a smart contract that is attached to the account. This can,
 for example, be useful when one would allow users to sign transactions with
 other cryptographic primitives than the default\footnote{Some hardware
   devices may be restricted to other cryptographic signing algorithms
-  than the default on the aeternity blockchain.} EdDSA as mentioned in
+  than the default on the \blockchain.} EdDSA as mentioned in
 Sect.\ \ref{sect:transactions}.
 
 If a user wants to have a generalized account, then this user must
@@ -506,7 +508,7 @@ involved for transaction and gas. This means that a new user has to
 buy tokens at some exchange to pay for the fees. This can be considered
 a hurdle for adoption. Of course, one can ask a user for an account and put
 some tokens on it, but then those tokens can be used for anything.
-The aeternity solution is more powerful and can be used to pay for
+The {\AE}eternity solution is more powerful and can be used to pay for
 just specific transactions. It can be used to pay for both transaction
 fee and gas cost of a contract call.
 

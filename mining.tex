@@ -4,7 +4,7 @@
 Traditionally blocks in a blockchain refer to an ordered list of
 transactions combined with a cryptographic hash of the previous block
 \cite{whatisablockchain,raikwar2019sok}. A hash function maps a
-binary of any size to a fixed size binary. The aeternity blockchain
+binary of any size to a fixed size binary. The \blockchain\
 uses the 32 byte Blake2b hash \cite{aumasson2013blake2}. Cryptographic
 hashes are collision resistant, making it very unlikely that two binaries
 result in the same 32 bytes hash. It is also cryptographically hard
@@ -31,7 +31,7 @@ computation bound.
 
 \subsection{Mining to resolve solution conflicts}
 
-In a distributed system, like the aeternity blockchain, there are many
+In a distributed system, like the \blockchain, there are many
 computers (nodes) that together build the blockchain. Each of these nodes
 can receive user signed transactions. Some of them will try to build a
 block of these transactions and put it on the chain. Those nodes are
@@ -59,7 +59,7 @@ node with bad blocks is also much more difficult
 
 The Cuckoo algorithm has an adaptable complexity. Simply put it
 searches for cycles of specific length in a graph with a given length
-for the nodes. In the aeternity blockchain the length of the cycle is 42 and the size
+for the nodes. In the \blockchain\ the length of the cycle is 42 and the size
 of the nodes is 30 bits. By also demanding a number of
 leading zeros in the solution (the difficulty), a solution can dynamically be made
 more or less easy to find. It is cryptographically unlikely that two
@@ -87,7 +87,7 @@ block will be discarded.
 Due to network latency, not all nodes are guaranteed to receive
 all blocks at the same time.  Therefore, a situation may occur in
 which part of the network first receives block $A$ and then block $B$,
-whereas the other nodes receives them in order first $B$ and then
+whereas the other nodes receives them in a different order, first $B$ and then
 $A$. The situation in which this happens and two nodes have different
 top blocks, is called a \textit{fork}. In fact, due to for example a network
 split in which several nodes are isolated for a while, forks can be
@@ -97,9 +97,9 @@ If blocks are gossiped to a node, then the total
 difficulty of the fork determines
 which branch to select. So in the unlikely case that a fork is
 created, there is a consensus over how to restore the branch with
-highest difficulty.
+the highest difficulty.
 
-A different kind of fork is created when one part of the nodes does
+A different kind of fork is created when one group of the nodes does
 not accept a block that the other nodes do accept as a valid block. This
 can be caused by having the nodes run incompatible versions of the
 protocol. These forks are not
@@ -109,8 +109,8 @@ automatically restored and are referred to as \textit{hard forks}.
 
 A user that submits a transaction has to wait for the transaction to
 be part of a block, before it can be considered a valid
-transaction. In fact, due to the previously described fork possibility due
-to network latency, one may have to see the transaction in a block
+transaction. In fact, due to the previously described fork possibility
+caused by network latency, one may have to see the transaction in a block
 followed by a few more blocks to be reasonably sure that the chain will
 perpetually keep that transaction. The longer one waits, the more certainty.
 
@@ -131,7 +131,7 @@ acceptable for some miner.
 
 \subsubsection{Key-blocks and micro-blocks}
 
-In Aeternity we use bitcoin NG \cite{Eyal:2016:BSB:2930611.2930615} to
+In Aeternity we use Bitcoin NG \cite{Eyal:2016:BSB:2930611.2930615} to
 address this problem. Bitcoin NG boils down to collectively accepting the miner of a
 block, called a \textit{key-block} in this context, as the
 \textit{leader}. This leader is allowed to periodically publish micro-blocks with
@@ -150,16 +150,16 @@ transactions in each micro-block need to be verified, which means
 computation time (verification of cryptographic signatures, running
 contracts, lookup data in previous blocks). In order to have a
 reasonably predictable computation task, each micro-block is limited to
-a maximum of 6 million gas and on the aeternity blockchain all
+a maximum of 6 million gas and on the \blockchain\ all
 transactions are associated with a gas cost. Even on a low-end computer that should
 not take more than a second to execute. The network latency and a good margin
 are accommodated in the other two seconds.
 
-Terminology wise, the height of the chain is determined by the
+Terminology-wise, the height of the chain is determined by the
 key-blocks, incrementing the height by one for each new key-block put
 on the chain. Micro-blocks follow a key-block and are on the same
 height. A key-block and the micro-blocks on the same height are
-together called a \textit{generation}. Since key-blocks do not contain
+collectively called a \textit{generation}. Since key-blocks do not contain
 transactions, but the micro-blocks do, one could conceptually see the
 generations as the blocks in the more traditional blockchain view.
 
@@ -197,12 +197,12 @@ micro-block\footnote{Note that if miners
 
 Only the leader is allowed to produce micro-blocks. Each key-block
 includes the  public key of the next leader and consecutive micro-blocks are only valid
-if signed with private key associated with it.. This protects against third parties trying
+if signed with the private key associated with it. This protects against third parties trying
 to post micro-blocks and all micro-blocks should form a well-defined
 sequence.
 
-A malicious leader, however, could construct forks in a generation of micro
-blocks, either by forking directly from the key-block, or by forking
+A malicious leader, however, could construct forks in a generation of
+micro-blocks, either by forking directly from the key-block, or by forking
 on a micro-block. This could be done to disrupt the network or to
 perform double spend attacks. A malicious miner could also try to
 produce more micro-blocks than entitled to by fiddling with the
@@ -219,10 +219,10 @@ the duration of 180 blocks.
 
 Each transaction is a binary of a certain size. Internally both size
 and computation are expressed in gas and there is a maximum amount of
-gas per micro-block that allows for maximally 300KB per micro-block.
+gas per micro-block that allows for maximally 300 KB per micro-block.
 Thus, an additional advantage of the introduction of micro-blocks is that
 instead of a huge block with 180,000 transactions in 3 minutes, we can create 60
-reasonably sized micro blocks of maximally 300 KB  in the same 3
+reasonably sized micro-blocks of maximally 300 KB  in the same 3
 minutes. This has several advantages for network latency and
 smaller blocks are easier and faster to gossip through the
 network. Moreover, if it takes longer to compute the next key-block we
