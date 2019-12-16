@@ -357,7 +357,7 @@ case, the winner, or anyone else, can call the claim function, which
 will transfer the price sum to the winner.
 \begin{verbatim}
  stateful entrypoint draw() : oracle_query(int, int) =
-     require( Chain.block_height > state.close_height, ongoing lottery" )
+     require( Chain.block_height > state.close_height, "ongoing lottery" )
      require( state.price_sum > 0, "no ongoing lottery" )
      require( state.query == None, "already drawn" )
      let q =
