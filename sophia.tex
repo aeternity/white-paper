@@ -8,26 +8,6 @@ chain. A call to a function in the contract results in a return value
 and updated state, both put back on the chain as a result of the
 call.
 
-Smart contracts are written in a programming language and for the
-aeternity a totally new language has been designed, called
-\textit{Sophia}. There is a compiler that compiles Sophia contracts to
-byte code that is executed by the virtual machine part of the
-blockchain.
-
-Contracts are put on chain by contract create
-transaction, specifying their byte code and data to compute the
-initial state. A contract on chain is called by contract call transactions\footnote{in
-  Aeternity  contracts are executed by a call, there is no
-  mechanism to automatically progress computation.}. Each contract
-creation and contract call requires computation effort and the user is paying
-for that effort by paying for \textit{gas}. Each operation is
-associated with a certain amount of gas and the total used gas is paid
-for. The user specifies how much gas is provided in the transaction. A
-surplus is returned. If there is too little gas provided, the
-transaction is accepted (it is recorded
-on the chain), and the user pays for transaction fee and gas,
-but the contract computation has failed and its state is unchanged.
-
 Smart contracts are an active research field
 \cite{DBLP:journals/corr/abs-1710-06372} and a substantial amount of
   effort goes in to studying the verification and validation of smart contracts
@@ -41,7 +21,7 @@ implementation, contract execution is performed in a
 defined semantics, such that all implementations perform exactly the
 same computation steps, with exactly the same result and charging
 exactly the same amount of gas. The \blockchain\ defines two virtual
-machines, the AEVM, compatible to the Ethereum blockchain, and the more
+machines, the AEVM, compatible with the Ethereum blockchain, and the more
 efficient FATE virtual machine.
 
 The second challenge is to design a language to express contracts in
@@ -52,12 +32,28 @@ vulnerabilities that can be exploited. Sophia is a functional language
 to accommodate for these properties. It is designed as a contract
 language with security and user comfort in mind. In particular,
 vulnerabilities in contracts in other languages
-\cite{atzei2017survey,mehar2019understanding,delmolino2016step} have been studied with the goal to
+\cite{atzei2017survey,mehar2019understanding,delmolino2016step} have been
+studied with the goal to
 avoid the possibility to make such mistakes in Sophia.
+
+% Contracts are put on chain by contract create
+% transactions, specifying their byte code and data to compute the
+% initial state. A contract on chain is called by contract call
+% transactions\footnote{in
+%  \aet\ contracts are executed by explicit calls, there is no
+%  mechanism to automatically progress computation.}. Each contract
+% creation and contract call requires computation effort and the user is paying
+% for that effort by paying for \textit{gas}. Each operation is
+% associated with a certain amount of gas and the total used gas is paid
+% for. The user specifies how much gas is provided in the transaction. A
+% surplus is returned. If there is too little gas provided, the
+% transaction is accepted (it is recorded
+% on the chain), and the user pays for transaction fee and gas,
+% but the contract computation fails and the contract state remains unchanged.
 
 \subsection{The Sophia language}
 
-Sophia is a functional language \cite{hughes1989functional}.
+Sophia is a functional programming language \cite{hughes1989functional}.
 The main unit of code in Sophia is the \textit{contract}.
 A contract implementation, or simply a contract, is the code for a
 smart contract and consists of a list of types, entrypoints and local
@@ -80,8 +76,10 @@ create transaction}. Let us assume that
 this is a Dutch auction, then the initial price
 would be set high and for each new key-block that is mined (representing
 time) the price is decreased. Someone buys the object by calling a
-\texttt{bid} function. When this bidding \textbf{contract call transaction} executes,
-the contract computes the price on that height; if the caller has
+\texttt{bid} function. When this bidding \textbf{contract call transaction}
+executes,
+the contract computes the price given the current block number; if the caller
+has
 supplied enough funds in that call, the seller is paid, the
 bidder is charged (possibly refunded the extras) and the contract
 enters a non sellable state for the object. The next bidder will fail
@@ -150,7 +148,8 @@ The transparency of the blockchain guarantees that it is verifiable
 that the first valid bid on chain\footnote{The \blockchain\
   does not guarantee that the first one posting a valid bid becomes
   the first one on chain.} is correctly paying the right
-price. Moreover, it is verifiable that the bidding call transactions accepted later are
+price. Moreover, it is verifiable that the bidding call transactions accepted
+later are
 only charged a transaction fee and the cost of execution.
 The sale conditions are transparent, but whether the actual object ever
 arrives is outside the scope of the blockchain
@@ -158,9 +157,9 @@ arrives is outside the scope of the blockchain
 \subsection{The FATE virtual machine}
 \label{sect:fate}
 
-The Fast aeternity Transaction Engine (FATE) VM uses transactions as
+The Fast Aeternity Transaction Engine (FATE) VM uses transactions as
 its basic operations and operates directly on the state tree of the
-æternity chain. This enables native integration with first class
+\aet\ chain. This enables native integration with first class
 objects such as oracles, the naming system, and state channels since
 those are all managed by specific types of transactions described on
 the protocol level. FATE is a simple-to-use machine language, superior
@@ -179,7 +178,7 @@ type violations as an attack vector.
 The instruction memory is divided into functions and basic
 blocks. Only basic blocks can be indexed and used as jump
 destinations. This is a precaution to be unable to jump to arbitrary
-positions in memory. It also carefully fit FATE's function style by
+positions in memory. It also fit FATE's function style by
 having function calls instead of jumps. Moreover, data and control
 flow are separated, one cannot possibly modify the running
 contract, since the code memory cannot be written to.
@@ -197,14 +196,15 @@ flow. FATE checks all arithmetic operations to keep the right meaning
 of it. Integers cannot overflow, since FATE uses unbounded integer
 arithmetic (cf.\ Bignums \cite{serpette1989bignum}). Floats are not
 part of the language, avoiding a bunch of issues associated with
-floating point arithmetic. Also you cannot cast types (e.g\ integers to booleans). This makes
+floating point arithmetic. Also you cannot cast types (e.g\ integers to
+booleans). This makes
 FATE ultimately a safer coding platform for smart contracts.
 
 \subsubsection{More efficient}
 
 FATE uses high level instructions. There are instructions to operate
 on the chain state tree in a safe and formalized way. Likewise the
-virtual machine has high level support for most of the transactions
+virtual machine has high-level support for most of the transactions
 available on the \blockchain. There are operations such as
 `ORACLE\_CHECK\_QUERY' for querying an oracle or `AENS\_CLAIM' for
 claiming a name.
@@ -215,9 +215,8 @@ use on average ten times less space than the same contract compiled to
 the AEVM, the Ethereum compatible VM. At the same time, it performs on
 average much faster and uses therefore less gas.
 
-FATE byte code looks in itself as a readable program. For example,
-the bid function of the Dutch auction contract compiles to
-this code:
+FATE byte code by itself is already a readable program. For example, the bid
+function of the Dutch auction contract compiles to this code:
 
 \begin{verbatim}
 FUNCTION bid( ) : {tuple,[]}
@@ -249,11 +248,10 @@ FUNCTION bid( ) : {tuple,[]}
 The notion \verb+BB+ stands for basic block and jumps are always to
 such a basic block. Note that for example `CREATOR', `SPEND' and
 `BALANCE' are native instructions used in basic block 5. The
-instruction \verb+ CALL "(h:p"+ in basic block 2 looks a bit cryptic for a call to  the
+instruction \verb+ CALL "(h:p"+ in basic block 2 looks a bit cryptic for a call
+to  the
 function \verb+demanded_price()+. Each function name is hashed to 4
 bytes that are printed as a string.
 
 Both memory constraints and computation efficiency are important to
-enable smaller contracts to also be run on IoT devices
-(cf. \cite{ellul2018alkylvm}) as well as to be able to get more
-computation into a micro-block.
+enable smaller contracts to to get more computation into a micro-block.

@@ -1,1 +1,126 @@
 \section{Future ambitions}
+
+The \blockchain\ went live on November 28th, 2018. For the curious reader,
+there is a timestamp in each block and the first mined key-block has timestamp
+``1543373685748'', which is the time in milliseconds using POSIX time. Since
+that first date, 3 major protocol updates have successfully be applied,
+enriching the \blockchain\ with new features. The new protocols are effective
+at a certain height and the software supports the old protocol under that
+height and the new protocol from that height. Each protocol is referred to by
+name for ease in communication with developers of blockchain applications:
+\textit{Roma}, effective at height 0, \textit{Minerva}, effective at height
+47800, \textit{Fortuna}, effective at height 90800, and \textit{Lima},
+effective at height 161150.
+
+In the future, there will be more protocol upgrades with additional features,
+some of which we are going to outline in this section.
+
+\subsection{Formal verification}
+
+Over the course of its existence Ethereum has had many big flaws on deployed
+contracts uncovered and abused. Some of these were simple developer errors and
+others very subtle due to the complexity of both the EVM and Solidity.
+
+Formal verification is one of the approaches to prevent these problems by
+allowing code to be proven correctly with regards to a given specification.
+Formal verification is used in many areas where high assurance is of vital
+importance, e.g. cryptographic systems.
+Take the parity multi-sig contract flaw, which allowed anyone to destroy one of
+the libraries used by the multi-sig contract rendering it useless, as an
+example. A formal specification of this contract could include the assumption
+that destruction functions can only be called by authorized accounts or not at
+all. Checking this specification against the code would then have raised an
+error. But there is certainly still the problem of writing good specifications.
+
+Since Sophia was written with formal verification in mind, we have laid most of
+the ground work required to provide these tools. Together with Sophia being a
+functional language, this should prevent many classes of bugs plaguing Solidity
+smart contracts.
+
+\subsection{Native tokens}
+
+The ERC-20 standard, which specified an interface for fungible tokens, was
+arguably one of the biggest drivers of adoption for Ethereum. With that came
+the ability for anyone to design and test economic systems, which was a great
+catalyst for the innovation happening on Ethereum. A big drawback of the token
+contracts deployed was and still is the requirement to pay gas and thus own
+Eth, which can be a major hurdle for users, who don't necessarily want to own
+any Eth or even know what that is. In addition to that, interacting or
+integrating with token can be a pain, especially since the interface evolved
+over time and if upgradability was not baked into the contract there are only
+very clumsy upgrade paths for old contracts.
+
+To address these drawbacks, \aet\ will make tokens native to the blockchain.
+That opens the way to be able to use tokens to pay transaction fees, which
+frees users from the requirement to own any other tokens. It will make usage
+cheaper since the basic token logic and storage can be optimized in the virtual
+machine. Finally, this will allow tokens to benefit from updates and upgrades
+for free, without needing complex upgrade strategies.
+
+\subsection{Computational integrity}
+
+Computational integrity assures that a given function was computed correctly.
+This could mean that a coin transfer correctly deducts coins from one account
+while adding it to another or the correct execution of a smart contract call.
+Currently assuring these correct executions is done by miners and node
+operators via complex consensus rules. It also requires everyone who wants to
+check the correct execution to re-run the full computation, which could be very
+costly.
+
+There are different ways that allow checking the integrity of a function
+execution but we are going to assume that the prover, the agent running the
+computation and trying to prove that they executed it correctly, can generate a
+succinct proof. Succinctness implies that checking the proof is
+computationally less expensive than actually re-running the computation. This
+proof can then be read and validated by another party, the verifier, who wants
+to check the integrity of the computation.
+
+The existence of such primitives then allows scaling, since checking the
+proof takes less resources than running the computation. Additionally, these
+proofs can be generated in such a way that the function itself can be private,
+while still being verifiable by a third party, which would be a big gain in
+privacy.
+
+Sophia already comes with some primitives to write efficient proof verifiers
+and in the future we want to integrate these primitives even further into the
+\aet\ protocol, to make it faster and private.
+
+\subsection{Scaling}
+
+The Bitcoin-NG consensus described in section \ref{sect:mining} allows us to
+handle around 120 transaction per second which is sufficient to process
+everything almost without delay or block congestion at the time of writing.
+But in a future where millions of people want to use \aet\ we will need higher
+throughput. One partial solution, state channels, are already available today
+and will become more relevant as usability improves.
+
+Besides state channels exist many other different approaches, which can be used
+alongside. The most obvious solution is to improve the consensus algorithm in
+such a way that it can handle higher throughput and there are already many
+other consensus algorithms, which can improve on Bitcoin-NG.
+
+Another direction to go is to split the blockchain into distinct parts, which
+is also common for databases. These parts are then called shards and each one
+will then be responsible for only a subset of all available transactions.
+Dividing up the work like this would then offer each shard more room to scale
+just by virtue of only having to handle a fraction of the previous load. Shards
+will still have to communicate with each other, which is a possible bottleneck,
+and have to know of each others existence. But overall the system could present
+a big gain in throughput.
+
+The third widely researched solution are then side-chains, app-chains or
+child-chains.
+Unlike sharding, side-chains do not divide a global state space but each
+one has its own state. The idea of this approach is to have many specific,
+maybe even single purpose, chains which do not necessarily have to know of each
+other. The name side-chain usually implies that they are
+pegged to some sort of main or parent chain, which can be thought of as a
+communication hub. Side-chain then imply that each app could get its own chain,
+thus only having to handle transactions for this one app and not be concerned
+with all the other applications. This in turn would then allow each app much
+more throughput and maybe even specific optimizations.
+
+All the solutions described here offer different trade-offs but could certainly
+be used in tandem. \aet\ will most likely take elements from all the presented
+approaches in order to meet demands by users.
+
