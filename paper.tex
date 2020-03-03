@@ -9,8 +9,8 @@
 \usepackage{graphics}
 \usepackage{multicol}
 
-\newcommand{\blockchain}{{\AE}ternity blockchain}
-\newcommand{\aet}{{\AE}ternity}
+\newcommand{\blockchain}{{\ae}ternity blockchain}
+\newcommand{\aet}{{\ae}ternity}
 
 %
 % \BibTeX command to typeset BibTeX logo in the docs
@@ -20,14 +20,10 @@
 
 \begin{document}
 
-%
-% The "title" command has an optional parameter, allowing the author to define
-a "short title" to be used in page headers.
-\title{The \blockchain\ \\white paper}
-%% \subtitle{White paper}
+\title{DRAFT: The \blockchain\ \\white paper}
 
 \author{Aeternity\\development team  \and Thomas Arts \and
-             Yanislav Malahov}
+             Yanislav Malahov \and Sascha Hanse}
 
 \maketitle
 
@@ -40,7 +36,7 @@ On the one hand the \blockchain\ is scalable due to a next generation
 consensus algorithm and the use of state channels. On the other hand,
 the \blockchain\ is a excellent development platform for
 applications by offering native support for commonly used
-\textbf{blockchain features}, as well as secure and highly efficient
+blockchain features, as well as secure and highly efficient
 contract language and virtual machine.
 
 In this white paper we explain the above mentioned concepts of the
@@ -53,13 +49,17 @@ description.
 
 %%\keywords{blockchain, state channels}
 
+\newpage
+
+\tableofcontents
+
+\newpage
 
 \input{intro.tex}
 \input{mining.tex}
+\input{transactions.tex}
 \input{scaling.tex}
 \input{sophia.tex}
-\input{transactions.tex}
-\input{results.tex}
 \input{vision.tex}
 %\input{conclusions.tex}
 

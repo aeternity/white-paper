@@ -34,7 +34,7 @@ Solving a cuckoo cycle instance requires finding a fixed length cycle in a
 bipartite graph of $2^N$ edges and $2^M$ nodes. The ratio of $\frac{M}{N}$,
 $\frac{1}{2}$ by default, is one of the parameters to control the hardness of
 the problem. Edges are represented as $N$ bit strings.
-As of December 2019, \aet\ requires cycles of length 42 and the 30 bit edges.
+As of December 2019, \aet\ requires cycles of length 42 and 30 bit edges.
 
 \subsubsection{Difficulty}
 
@@ -90,7 +90,7 @@ manual intervention by node operators might be required.
 %participants.
 
 \subsection{Bitcoin-NG}
- 
+
 Where in Bitcoin or Ethereum each block filled with transactions requires
 a proof-of-work solution, a miner in \aet\ has to find one proof-of-work
 solution and can then create multiple blocks with transactions until the next
@@ -106,7 +106,7 @@ transactions. Every new key-block starts a new epoch---or \textit{generation}
 in the \aet\ context.
 
 The key-blocks contain the hash of a previous micro-block as well as the hash
-of the previous key-block. 
+of the previous key-block.
 Micro-blocks are being created in rapid succession making it likely that any
 given new key-block does not include the hash of the latest micro-block
 produced by the previous round leader.
